@@ -24,11 +24,13 @@ exports.sourceNodes = async (
 
   // * Get the listings
   const { results: listings } = await etsyFetch(
-    `${ETSY_BASE_URL}/shops/${shopId}/listings/featured?api_key=${apiKey}${language ? `&language=${language}` : ''}`
-  ).then(res => res.json())
+    `${ETSY_BASE_URL}/shops/${shopId}/listings/active?api_key=${apiKey}&limit=100000${
+      language ? `&language=${language}` : ''
+    }`
+  ).then((res) => res.json())
 
   // * Process listings
-  const listingProcessingJobs = listings.map(async listing => {
+  const listingProcessingJobs = listings.map(async (listing) => {
     const { listing_id } = listing
     const listingNodeId = `gsetsy_listing_${listing_id}`
 
@@ -44,7 +46,7 @@ exports.sourceNodes = async (
         `gatsby-source-etsy: using cached version of listing node ${cachedListingNode.id}`
       )
       touchNode({ nodeId: cachedListingNode.id })
-      cachedImageNodeIds.forEach(nodeId => touchNode({ nodeId }))
+      cachedImageNodeIds.forEach((nodeId) => touchNode({ nodeId }))
       return
     }
 
@@ -66,10 +68,10 @@ exports.sourceNodes = async (
     // * Get images metadata for the listing
     const { results: images } = await etsyFetch(
       `${ETSY_BASE_URL}/listings/${listing_id}/images?api_key=${apiKey}`
-    ).then(res => res.json())
+    ).then((res) => res.json())
 
     // * Process images
-    const imageNodePromises = images.map(async image => {
+    const imageNodePromises = images.map(async (image) => {
       // * Create a node for each image
       const imageNodeId = `${listingNodeId}_image_${image.listing_image_id}`
       await createNode({
@@ -104,7 +106,7 @@ exports.sourceNodes = async (
       return imageNode
     })
     const imageNodes = await Promise.all(imageNodePromises)
-    const imageNodeIds = imageNodes.map(node => node.id)
+    const imageNodeIds = imageNodes.map((node) => node.id)
 
     // * Cache the listing node id and image node ids
     await cache.set(`cached-${listingNodeId}`, {
